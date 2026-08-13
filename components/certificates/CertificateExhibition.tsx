@@ -5,6 +5,8 @@ import {
   motion,
   useScroll,
   useTransform,
+  useMotionValue,
+  useSpring,
   useMotionValueEvent,
   useReducedMotion,
   AnimatePresence,
@@ -38,24 +40,84 @@ export function CertificateExhibition() {
   const headingOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
+  // Parallax background layers (move at different speeds than the cert rail)
+  const gridX = useTransform(activeFloat, (v) => `${v * 30 * 0.3}vw`);
+  const auraX = useTransform(activeFloat, (v) => `${v * 30 * 0.6}vw`);
+
+  // Cursor spotlight
+  const mx = useMotionValue(50);
+  const my = useMotionValue(45);
+  const sx = useSpring(mx, { stiffness: 50, damping: 20 });
+  const sy = useSpring(my, { stiffness: 50, damping: 20 });
+  const spotlight = useTransform(
+    [sx, sy],
+    ([x, y]: number[]) =>
+      `radial-gradient(34rem 34rem at ${x}% ${y}%, rgba(244,243,240,0.08), transparent 60%)`
+  );
+
   const current = certificates[active];
+
+  const jumpTo = (i: number) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const total = el.offsetHeight - window.innerHeight;
+    const top = el.offsetTop + (N > 1 ? i / (N - 1) : 0) * total;
+    window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
+  };
+
+  const onMouseMove = (e: { clientX: number; clientY: number }) => {
+    mx.set((e.clientX / window.innerWidth) * 100);
+    my.set((e.clientY / window.innerHeight) * 100);
+  };
 
   return (
     <section
       id="certifications"
       ref={sectionRef}
-      style={{ height: `${N * 38 + 160}vh` }}
+      style={{ height: `${N * 18 + 120}vh` }}
       className="relative scroll-mt-24"
     >
-      <div className="sticky top-0 h-screen overflow-hidden bg-ink-950">
-        {/* studio light */}
-        <div
+      <div
+        className="sticky top-0 h-screen overflow-hidden bg-ink-950"
+        onMouseMove={onMouseMove}
+      >
+        {/* far parallax grid */}
+        <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[80vh] w-[80vh] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          className="pointer-events-none absolute inset-y-0 -left-1/2 z-0 w-[200%] opacity-60"
           style={{
-            background:
-              "radial-gradient(circle, rgba(244,243,240,0.05), transparent 60%)",
+            translateX: gridX,
+            backgroundImage:
+              "radial-gradient(rgba(244,243,240,0.05) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
           }}
+        />
+
+        {/* mid parallax aurora */}
+        {!reduced && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0"
+            style={{ translateX: auraX }}
+          >
+            <motion.div
+              className="absolute -left-1/4 top-1/4 h-[70vh] w-[70vh] rounded-full bg-white/[0.04] blur-3xl"
+              animate={{ x: [0, 60, -30, 0], y: [0, -40, 30, 0] }}
+              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute -right-1/4 bottom-0 h-[60vh] w-[60vh] rounded-full bg-white/[0.03] blur-3xl"
+              animate={{ x: [0, -50, 20, 0], y: [0, 30, -20, 0] }}
+              transition={{ duration: 26, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
+        )}
+
+        {/* cursor spotlight */}
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{ background: spotlight }}
         />
 
         {/* intro heading */}
@@ -72,7 +134,7 @@ export function CertificateExhibition() {
 
         {/* stage */}
         <div
-          style={{ perspective: 1400 }}
+          style={{ perspective: 1500 }}
           className="relative flex h-full items-center justify-center"
         >
           {certificates.map((cert, i) => (
@@ -88,6 +150,39 @@ export function CertificateExhibition() {
           ))}
         </div>
 
+        {/* clickable index rail */}
+        <nav
+          aria-label="Certificate navigation"
+          className="absolute right-6 top-1/2 z-40 hidden -translate-y-1/2 flex-col gap-3 md:flex"
+        >
+          {certificates.map((cert, i) => (
+            <button
+              key={cert.id}
+              type="button"
+              onClick={() => jumpTo(i)}
+              aria-current={i === active}
+              aria-label={`Go to certificate ${i + 1}: ${cert.title}`}
+              data-cursor="GO"
+              className="group flex items-center justify-end gap-3"
+            >
+              <span
+                className={`text-[10px] tabular-nums tracking-[0.15em] transition-colors ${
+                  i === active ? "text-bone" : "text-haze/50 group-hover:text-haze"
+                }`}
+              >
+                {pad(i + 1)}
+              </span>
+              <span
+                className={`h-px rounded-full transition-all duration-300 ${
+                  i === active
+                    ? "w-8 bg-bone"
+                    : "w-4 bg-white/15 group-hover:w-6 group-hover:bg-white/40"
+                }`}
+              />
+            </button>
+          ))}
+        </nav>
+
         {/* counter */}
         <div className="absolute left-6 top-24 z-40 md:left-10">
           <p className="eyebrow">Certifications</p>
@@ -98,7 +193,7 @@ export function CertificateExhibition() {
         </div>
 
         {/* caption */}
-        <div className="absolute bottom-24 left-1/2 z-40 w-[88%] -translate-x-1/2 text-center md:w-[60%]">
+        <div className="absolute bottom-24 left-1/2 z-40 w-[88%] -translate-x-1/2 text-center md:w-[56%]">
           <AnimatePresence mode="wait">
             <motion.div
               key={current.id}
