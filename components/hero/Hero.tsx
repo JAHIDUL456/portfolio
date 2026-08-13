@@ -6,10 +6,24 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
+  AnimatePresence,
 } from "framer-motion";
+import { Github, Linkedin, Mail, Phone } from "lucide-react";
+import { site } from "@/data/site";
+
+const words = ["AI systems", "web apps", "mobile apps", "real products"];
+
+const heroSocials = [
+  { label: "Email", href: `mailto:${site.contact.email}`, Icon: Mail },
+  { label: "GitHub", href: site.contact.links[0].href, Icon: Github },
+  { label: "LinkedIn", href: site.contact.links[1].href, Icon: Linkedin },
+  { label: "Phone", href: site.contact.phoneHref, Icon: Phone },
+];
 
 export function Hero() {
   const [scrolled, setScrolled] = useState(false);
+  const [wi, setWi] = useState(0);
+
   const mx = useMotionValue(50);
   const my = useMotionValue(40);
   const gx = useSpring(mx, { stiffness: 60, damping: 20 });
@@ -17,7 +31,7 @@ export function Hero() {
   const bg = useTransform(
     [gx, gy],
     ([px, py]: number[]) =>
-      `radial-gradient(60rem 60rem at ${px}% ${py}%, rgba(244,243,240,0.05), transparent 60%)`
+      `radial-gradient(60rem 60rem at ${px}% ${py}%, rgba(244,243,240,0.06), transparent 60%)`
   );
 
   useEffect(() => {
@@ -31,34 +45,60 @@ export function Hero() {
     };
     window.addEventListener("mousemove", onMove, { passive: true });
 
+    const t = setInterval(() => setWi((w) => (w + 1) % words.length), 2600);
+
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("mousemove", onMove);
+      clearInterval(t);
     };
   }, [mx, my]);
-
-  const lines = [
-    { text: "I build intelligent systems", delay: 0.35 },
-    { text: "and digital products.", delay: 0.45 },
-  ];
 
   return (
     <section
       id="top"
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6"
     >
+      {/* reactive light */}
       <motion.div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{ background: bg }}
       />
+      {/* drifting aurora */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -left-1/4 top-1/4 h-[60vh] w-[60vh] rounded-full bg-white/[0.04] blur-3xl"
+        animate={{ x: [0, 50, -20, 0], y: [0, -30, 20, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -right-1/4 bottom-0 h-[55vh] w-[55vh] rounded-full bg-white/[0.03] blur-3xl"
+        animate={{ x: [0, -40, 15, 0], y: [0, 25, -15, 0] }}
+        transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-      <div className="relative z-10 mx-auto w-full max-w-edge text-center">
+      <div className="relative z-10 mx-auto flex w-full max-w-edge flex-col items-center text-center">
+        {/* availability pill */}
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-haze"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          Available for new work
+        </motion.div>
+
         <motion.p
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="eyebrow mb-8"
+          className="eyebrow mb-6"
         >
           Md. Jahidul Islam — AI Engineer
         </motion.p>
@@ -82,25 +122,30 @@ export function Hero() {
           ))}
         </h1>
 
-        <div className="mt-10 space-y-1">
-          {lines.map((l) => (
-            <motion.p
-              key={l.text}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: l.delay }}
-              className="text-base text-haze md:text-lg"
-            >
-              {l.text}
-            </motion.p>
-          ))}
-        </div>
+        <p className="mt-8 max-w-xl text-base text-haze md:text-lg">
+          I build{" "}
+          <span className="relative inline-grid text-bone">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={wi}
+                initial={{ y: 14, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -14, opacity: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="col-start-1 row-start-1"
+              >
+                {words[wi]}
+              </motion.span>
+            </AnimatePresence>
+          </span>{" "}
+          — and intelligent digital products.
+        </p>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
-          className="mt-12"
+          className="mt-12 flex flex-col items-center gap-7"
         >
           <a
             href="#work"
@@ -112,6 +157,26 @@ export function Hero() {
               →
             </span>
           </a>
+
+          {/* reach me directly */}
+          <div className="flex items-center gap-2">
+            {heroSocials.map((s) => {
+              const Icon = s.Icon;
+              const external = s.href.startsWith("http");
+              return (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  aria-label={s.label}
+                  data-cursor="OPEN"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-haze transition-colors hover:border-white/30 hover:bg-white/5 hover:text-bone"
+                >
+                  <Icon size={18} strokeWidth={1.6} />
+                </a>
+              );
+            })}
+          </div>
         </motion.div>
       </div>
 
