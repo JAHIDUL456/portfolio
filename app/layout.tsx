@@ -21,12 +21,12 @@ const display = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Md. Jahidul Islam — AI Engineer",
+    default: "Md. Jahidul Islam — FULL STACK SOFTWARE ENGINEER(AI)",
     template: "%s — Md. Jahidul Islam",
   },
   description: site.description,
   keywords: [
-    "AI Engineer",
+    "FULL STACK SOFTWARE ENGINEER(AI)",
     "Md. Jahidul Islam",
     "Machine Learning",
     "Product Engineer",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: site.name }],
   openGraph: {
-    title: "Md. Jahidul Islam — AI Engineer",
+    title: "Md. Jahidul Islam — FULL STACK SOFTWARE ENGINEER(AI)",
     description: site.description,
     url: site.url,
     siteName: site.name,
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Md. Jahidul Islam — AI Engineer",
+    title: "Md. Jahidul Islam — FULL STACK SOFTWARE ENGINEER(AI)",
     description: site.description,
   },
 };

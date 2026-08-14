@@ -33,7 +33,7 @@ export default function OG() {
           }}
         >
           <span>{site.name}</span>
-          <span>AI Engineer</span>
+          <span>FULL STACK SOFTWARE ENGINEER(AI)</span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>

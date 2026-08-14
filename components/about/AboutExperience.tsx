@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   motion,
   useScroll,
   useTransform,
+  useMotionValue,
   useMotionValueEvent,
   useReducedMotion,
   AnimatePresence,
   type Variants,
+  type MotionValue,
 } from "framer-motion";
 import {
   Brain,
@@ -20,6 +23,8 @@ import {
   Globe,
   Sparkles,
   Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { education, experiences, skillGroups } from "@/data/about";
 
@@ -123,27 +128,112 @@ function SkillsVisual() {
   );
 }
 
-function ExperienceVisual() {
-  const reduced = useReducedMotion() ?? false;
+const ROAD =
+  "M180 20 C 320 130, 40 230, 180 340 C 300 430, 60 500, 180 580 C 300 650, 120 690, 180 700";
+
+function ExperienceJourney({
+  progress,
+  active,
+  onJump,
+}: {
+  progress: MotionValue<number>;
+  active: number;
+  onJump: (i: number) => void;
+}) {
+  const pathRef = useRef<SVGPathElement>(null);
+  const [pts, setPts] = useState<{ left: number; top: number }[]>([]);
+  const tx = useMotionValue(50);
+  const ty = useMotionValue(4);
+
+  const place = (t: number) => {
+    const el = pathRef.current;
+    if (!el) return;
+    const len = el.getTotalLength();
+    const p = el.getPointAtLength(Math.max(0, Math.min(1, t)) * len);
+    tx.set((p.x / 360) * 100);
+    ty.set((p.y / 720) * 100);
+  };
+
+  useEffect(() => {
+    const el = pathRef.current;
+    if (!el) return;
+    const len = el.getTotalLength();
+    setPts(
+      experiences.map((_, i) => {
+        const p = el.getPointAtLength((i / (experiences.length - 1)) * len);
+        return { left: (p.x / 360) * 100, top: (p.y / 720) * 100 };
+      })
+    );
+    place(progress.get());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useMotionValueEvent(progress, "change", place);
+
+  const left = useTransform(tx, (v) => `${v}%`);
+  const top = useTransform(ty, (v) => `${v}%`);
+  const draw = useTransform(progress, [0, 1], ["1", "0"]);
+
   return (
-    <div className="relative h-56 w-56">
-      <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b from-white/5 via-white/25 to-white/5" />
-      {experiences.map((x, i) => (
-        <motion.div
-          key={x.company}
-          className="absolute left-1/2 flex -translate-x-1/2 items-center gap-3"
-          style={{ top: `${(i / (experiences.length - 1)) * 100}%` }}
-          initial={reduced ? { opacity: 0, scale: 0.8 } : { opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.12, duration: 0.5 }}
-        >
-          <span className="h-3 w-3 rounded-full border border-bone/40 bg-ink-950" />
-          <span className="whitespace-nowrap rounded-full border border-white/10 bg-ink-850/80 px-3 py-1 text-[11px] text-bone backdrop-blur">
-            {x.company}
-          </span>
-        </motion.div>
-      ))}
+    <div className="relative h-[520px] w-[260px] md:h-[600px] md:w-[300px]">
+      <svg viewBox="0 0 360 720" className="h-full w-full" fill="none">
+        {/* base road */}
+        <path
+          ref={pathRef}
+          d={ROAD}
+          pathLength={1}
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth={4}
+          strokeLinecap="round"
+        />
+        {/* travelled road */}
+        <motion.path
+          d={ROAD}
+          pathLength={1}
+          stroke="#f4f3f0"
+          strokeWidth={4}
+          strokeLinecap="round"
+          strokeDasharray={1}
+          style={{ strokeDashoffset: draw }}
+        />
+        {/* milestones */}
+        {pts.map((p, i) => {
+          const isActive = i === active;
+          const isCurrent = i === 0;
+          return (
+            <g
+              key={i}
+              transform={`translate(${(p.left / 100) * 360} ${(p.top / 100) * 720})`}
+              onClick={() => onJump(i)}
+              className="cursor-pointer"
+            >
+              {/* hit area */}
+              <circle r={26} className="fill-transparent" />
+              <circle
+                r={isActive ? 11 : 8}
+                className={isActive ? "fill-bone" : "fill-ink-950 transition-all"}
+                stroke={isCurrent ? "#34d399" : isActive ? "#f4f3f0" : "rgba(255,255,255,0.4)"}
+                strokeWidth={2.5}
+              />
+              {isCurrent && <circle r={16} className="fill-none stroke-emerald-400/40" strokeWidth={1.5} />}
+              <text
+                x={22}
+                y={4}
+                className={`pointer-events-none select-none text-[11px] ${isActive ? "fill-bone" : "fill-haze"}`}
+              >
+                {experiences[i].company}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* traveller = profile, moving along the road */}
+      <motion.div style={{ left, top }} className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2">
+        <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-bone shadow-[0_0_28px_-6px_rgba(244,243,240,0.7)]">
+          <Image src="/profile.png" alt="" fill sizes="32px" className="object-cover" />
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -170,17 +260,27 @@ export function AboutExperience() {
   });
 
   const [phase, setPhase] = useState(0);
+  const [active, setActive] = useState(0);
+
+  // each phase owns an equal 1/N slice of the scroll (phase 0,1,2 = thirds)
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    const f = Math.min(Math.max(p * (N - 1), 0), N - 1);
-    setActiveSafe(Math.round(f));
+    setPhase((prev) => {
+      const next = Math.min(N - 1, Math.floor(p * N));
+      return prev === next ? prev : next;
+    });
   });
 
-  // separate setter to satisfy lint (state update in motion callback)
-  function setActiveSafe(v: number) {
-    setPhase((prev) => (prev === v ? prev : v));
-  }
-
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  // experience journey progress: only the LAST phase (p from (N-1)/N to 1)
+  const exprogress = useTransform(scrollYProgress, [(N - 1) / N, 1], [0, 1]);
+  useMotionValueEvent(exprogress, "change", (t) => {
+    if (phase !== 2) return;
+    const idx = Math.max(
+      0,
+      Math.min(experiences.length - 1, Math.round(t * (experiences.length - 1)))
+    );
+    setActive((prev) => (prev === idx ? prev : idx));
+  });
   const current = phases[phase];
   const ruet = education.find((e) => e.level === "college")!;
 
@@ -188,7 +288,18 @@ export function AboutExperience() {
     const el = sectionRef.current;
     if (!el) return;
     const total = el.offsetHeight - window.innerHeight;
-    const top = el.offsetTop + (i / (N - 1)) * total;
+    const top = el.offsetTop + ((i + 0.5) / N) * total;
+    window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
+  };
+
+  // jump to a specific experience milestone along the winding journey
+  const scrollToMilestone = (i: number) => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const total = el.offsetHeight - window.innerHeight;
+    const fi = experiences.length > 1 ? i / (experiences.length - 1) : 0;
+    const p = (N - 1) / N + fi * (1 / N);
+    const top = el.offsetTop + p * total;
     window.scrollTo({ top, behavior: reduced ? "auto" : "smooth" });
   };
 
@@ -196,7 +307,7 @@ export function AboutExperience() {
     <section
       id="about"
       ref={sectionRef}
-      style={{ height: `${N * 100 + 140}vh` }}
+      style={{ height: `${N * 100 + 420}vh` }}
       className="relative scroll-mt-24"
     >
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden bg-ink-950 md:flex-row md:justify-center md:gap-16">
@@ -237,7 +348,7 @@ export function AboutExperience() {
         <div className="relative z-10 mb-8 md:mb-0">
           {phase === 0 && <EducationVisual play={phase === 0} />}
           {phase === 1 && <SkillsVisual />}
-          {phase === 2 && <ExperienceVisual />}
+          {phase === 2 && <ExperienceJourney progress={exprogress} active={active} onJump={scrollToMilestone} />}
         </div>
 
         {/* content */}
@@ -322,25 +433,34 @@ export function AboutExperience() {
                   <motion.h3 variants={item} className="font-display text-3xl text-bone md:text-4xl">
                     Experience
                   </motion.h3>
-                  <motion.p variants={item} className="mt-2 text-sm text-haze">
-                    Shipping AI products in production.
-                  </motion.p>
-                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {experiences.map((x) => (
+                  <motion.div variants={item} className="mt-2 flex flex-wrap items-center gap-2 text-sm text-haze">
+                    <span>Currently at</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] uppercase tracking-[0.12em] text-emerald-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      {experiences[0].company}
+                    </span>
+                    <span>— {experiences[0].role}</span>
+                  </motion.div>
+
+                  <div className="mt-6">
+                    <AnimatePresence mode="wait">
                       <motion.div
-                        variants={item}
-                        key={x.company}
-                        className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                        key={active}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5"
                       >
                         <div className="flex items-baseline justify-between gap-3">
-                          <p className="text-bone">{x.company}</p>
-                          <p className="shrink-0 text-[11px] text-haze/70">{x.period}</p>
+                          <p className="text-bone">{experiences[active].company}</p>
+                          <p className="shrink-0 text-[11px] text-haze/70">{experiences[active].period}</p>
                         </div>
-                        <p className="mt-1 text-sm text-bone/90">{x.role}</p>
-                        <p className="text-[11px] text-haze/70">{x.location}</p>
-                        <p className="mt-2 text-[13px] leading-relaxed text-haze">{x.summary}</p>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {x.stack.map((s) => (
+                        <p className="mt-1 text-sm text-bone/90">{experiences[active].role}</p>
+                        <p className="text-[11px] text-haze/70">{experiences[active].location}</p>
+                        <p className="mt-3 text-sm leading-relaxed text-haze">{experiences[active].summary}</p>
+                        <div className="mt-4 flex flex-wrap gap-1.5">
+                          {experiences[active].stack.map((s) => (
                             <span
                               key={s}
                               className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-haze"
@@ -350,7 +470,37 @@ export function AboutExperience() {
                           ))}
                         </div>
                       </motion.div>
-                    ))}
+                    </AnimatePresence>
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => scrollToMilestone(active - 1)}
+                          disabled={active === 0}
+                          data-cursor="GO"
+                          aria-label="Previous role"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-bone transition-colors hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          <ChevronLeft size={16} strokeWidth={1.8} />
+                        </button>
+                        <span className="text-[11px] tabular-nums text-haze">
+                          {active + 1} / {experiences.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => scrollToMilestone(active + 1)}
+                          disabled={active === experiences.length - 1}
+                          data-cursor="GO"
+                          aria-label="Next role"
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-bone transition-colors hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+                        >
+                          <ChevronRight size={16} strokeWidth={1.8} />
+                        </button>
+                      </div>
+                      <p className="text-right text-[11px] uppercase tracking-[0.18em] text-haze/60">
+                        Scroll or tap to explore
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
