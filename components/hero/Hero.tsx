@@ -72,7 +72,7 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mb-7 h-40 w-40 overflow-hidden rounded-full ring-1 ring-white/15 shadow-[0_0_70px_-15px_rgba(244,243,240,0.3)] md:h-44 md:w-44"
+          className="relative mb-7 h-32 w-32 overflow-hidden rounded-full ring-1 ring-white/15 shadow-[0_0_70px_-15px_rgba(244,243,240,0.3)] sm:h-40 sm:w-40 md:h-44 md:w-44"
         >
           <Image
             src="/profile.png"
@@ -88,7 +88,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-          className="font-display text-4xl leading-tight tracking-tightest text-bone md:text-5xl"
+          className="font-display text-3xl leading-tight tracking-tightest text-bone sm:text-4xl md:text-5xl"
         >
           {site.name}
         </motion.h1>

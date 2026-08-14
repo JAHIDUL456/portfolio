@@ -54,7 +54,7 @@ function CountUp({ to, decimals = 2, play }: { to: number; decimals?: number; pl
 function EducationVisual({ play }: { play: boolean }) {
   const C = 2 * Math.PI * 52;
   return (
-    <div className="relative flex h-56 w-56 items-center justify-center">
+      <div className="relative flex h-48 w-48 items-center justify-center md:h-56 md:w-56">
       <svg viewBox="0 0 120 120" className="absolute inset-0 h-full w-full -rotate-90">
         <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
         <motion.circle
@@ -102,7 +102,7 @@ function SkillsConstellation({
   });
 
   return (
-    <div className="relative h-[340px] w-[340px]">
+    <div className="relative h-[230px] w-[230px] md:h-[340px] md:w-[340px]">
       {/* slow rotating dashed track */}
       <motion.div
         className="absolute inset-[10%] rounded-full border border-dashed border-white/10"
@@ -220,7 +220,7 @@ function ExperienceJourney({
   const draw = useTransform(progress, [0, 1], ["1", "0"]);
 
   return (
-    <div className="relative h-[520px] w-[260px] md:h-[600px] md:w-[300px]">
+    <div className="relative h-[320px] w-[160px] sm:h-[400px] sm:w-[200px] md:h-[520px] md:w-[260px] lg:h-[600px] lg:w-[300px]">
       <svg viewBox="0 0 360 720" className="h-full w-full" fill="none">
         {/* base road */}
         <path
@@ -366,7 +366,7 @@ export function AboutExperience() {
       style={{ height: `${N * 100 + 420}vh` }}
       className="relative scroll-mt-24"
     >
-      <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden bg-ink-950 md:flex-row md:justify-center md:gap-16">
+      <div className="sticky top-0 flex h-screen flex-col items-center justify-start gap-6 overflow-hidden bg-ink-950 px-4 pt-20 md:flex-row md:items-center md:justify-center md:gap-16 md:px-0 md:pt-0">
         {/* scene tint */}
         <AnimatePresence mode="wait">
           <motion.div
@@ -395,9 +395,9 @@ export function AboutExperience() {
         </motion.div>
 
         {/* heading */}
-        <div className="absolute left-6 top-24 z-30 md:left-10">
+        <div className="absolute left-4 top-16 z-30 md:left-10 md:top-24">
           <p className="eyebrow">About</p>
-          <p className="mt-2 font-display text-2xl text-bone">{current.tag}</p>
+          <p className="mt-2 font-display text-xl text-bone md:text-2xl">{current.tag}</p>
         </div>
 
         {/* visual */}
@@ -461,7 +461,7 @@ export function AboutExperience() {
                   </motion.p>
 
                   {/* group tabs */}
-                  <div className="mt-6 flex flex-wrap gap-2">
+                  <div className="mt-4 md:mt-6 flex flex-wrap gap-2">
                     {skillGroups.map((g, i) => (
                       <button
                         key={g.label}
@@ -531,7 +531,7 @@ export function AboutExperience() {
                     <span>— {experiences[0].role}</span>
                   </motion.div>
 
-                  <div className="mt-6">
+                  <div className="mt-4 md:mt-6">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={active}
@@ -539,7 +539,7 @@ export function AboutExperience() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -12 }}
                         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                        className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+                        className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:p-5"
                       >
                         <div className="flex items-baseline justify-between gap-3">
                           <p className="text-bone">{experiences[active].company}</p>
@@ -560,7 +560,7 @@ export function AboutExperience() {
                         </div>
                       </motion.div>
                     </AnimatePresence>
-                    <div className="mt-4 flex items-center justify-between gap-3">
+                    <div className="mt-3 md:mt-4 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"

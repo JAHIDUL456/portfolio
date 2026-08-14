@@ -86,9 +86,11 @@ export function WebExperience({ project }: { project: Project }) {
             <SidePanel project={project} active={active} reduced={reduced} />
           </div>
 
-          <div className="absolute bottom-[10vh] left-1/2 w-[90%] -translate-x-1/2 text-center md:hidden">
-            <SidePanel project={project} active={active} reduced={reduced} />
-          </div>
+           <div className="absolute bottom-[8vh] left-1/2 w-[92%] -translate-x-1/2 md:hidden">
+             <div className="rounded-2xl border border-white/10 bg-ink-950/90 px-5 py-5 text-left shadow-2xl backdrop-blur">
+               <SidePanel project={project} active={active} reduced={reduced} />
+             </div>
+           </div>
 
           <ScrollProgress
             progress={scrollYProgress}
