@@ -27,16 +27,18 @@ export const projects: Project[] = [
     index: "01",
     type: "mobile",
     name: "Farmer AI",
-    category: "Mobile Application",
+    category: "RAG System",
     tagline: "An AI companion for farmers, in their language.",
     description:
       "A multilingual assistant that helps farmers monitor crops, get expert guidance, and talk to AI in Bangla, Banglish, or English.",
     technologies: [
-      "React Native",
-      "TypeScript",
+      "Python",
+      "Qdrant vector database",
       "FastAPI",
       "LLM",
-      "PostgreSQL",
+      "Redis",
+      "Docker",
+      "GraphQL",
     ],
     transition: "vertical",
     screens: [
@@ -82,11 +84,13 @@ export const projects: Project[] = [
     description:
       "An intelligent commerce companion — track inventory, scan to sell, and act on AI-driven restock insights.",
     technologies: [
-      "React Native",
-      "TypeScript",
+      "Flutter",
+      "Python",
       "FastAPI",
-      "PostgreSQL",
+      "SQLite",
       "Redis",
+      "LLM",
+      "Ai Agent",
     ],
     transition: "horizontal",
     screens: [

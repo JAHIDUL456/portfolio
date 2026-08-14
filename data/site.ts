@@ -1,6 +1,6 @@
 export const site = {
   name: "Md. Jahidul Islam",
-  role: "AI Engineer",
+  role: "Full Stack Software Engineer (AI)",
   url: "https://jahidulislam.dev",
   description:
     "Md. Jahidul Islam — AI Engineer building intelligent systems and digital products. Experience the work, don't just see it.",

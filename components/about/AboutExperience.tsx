@@ -14,14 +14,6 @@ import {
   type MotionValue,
 } from "framer-motion";
 import {
-  Brain,
-  Atom,
-  Database,
-  Code,
-  Cpu,
-  Wind,
-  Globe,
-  Sparkles,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -59,8 +51,6 @@ function CountUp({ to, decimals = 2, play }: { to: number; decimals?: number; pl
   return <>{val.toFixed(decimals)}</>;
 }
 
-const orbit = [Brain, Atom, Database, Code, Cpu, Wind, Globe, Sparkles];
-
 function EducationVisual({ play }: { play: boolean }) {
   const C = 2 * Math.PI * 52;
   return (
@@ -91,38 +81,93 @@ function EducationVisual({ play }: { play: boolean }) {
   );
 }
 
-function SkillsVisual() {
+function SkillsConstellation({
+  active,
+  onSelect,
+}: {
+  active: number;
+  onSelect: (i: number) => void;
+}) {
   const reduced = useReducedMotion() ?? false;
+  const radius = 37;
+  const nodes = skillGroups.map((g, i) => {
+    const angle = (i / skillGroups.length) * Math.PI * 2 - Math.PI / 2;
+    const Icon = g.items[0].icon;
+    return {
+      g,
+      Icon,
+      left: 50 + Math.cos(angle) * radius,
+      top: 50 + Math.sin(angle) * radius,
+    };
+  });
+
   return (
-    <div className="relative h-56 w-56">
+    <div className="relative h-[340px] w-[340px]">
+      {/* slow rotating dashed track */}
       <motion.div
-        className="absolute inset-0"
+        className="absolute inset-[10%] rounded-full border border-dashed border-white/10"
         animate={reduced ? {} : { rotate: 360 }}
-        transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-      >
-        {orbit.map((Icon, i) => {
-          const angle = (i / orbit.length) * Math.PI * 2 - Math.PI / 2;
-          const r = 46;
-          const left = 50 + Math.cos(angle) * r;
-          const top = 50 + Math.sin(angle) * r;
-          return (
-            <motion.div
-              key={i}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-ink-850/80 p-3 text-bone backdrop-blur"
-              style={{ left: `${left}%`, top: `${top}%` }}
-              animate={reduced ? {} : { rotate: -360 }}
-              transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
+      />
+      {/* connector lines */}
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" fill="none">
+        {nodes.map((n, i) => (
+          <line
+            key={i}
+            x1={50}
+            y1={50}
+            x2={n.left}
+            y2={n.top}
+            className={i === active ? "stroke-bone/40" : "stroke-white/10"}
+            strokeWidth={0.4}
+          />
+        ))}
+      </svg>
+
+      {/* group nodes */}
+      {nodes.map((n, i) => {
+        const isActive = i === active;
+        const Icon = n.Icon;
+        return (
+          <button
+            key={n.g.label}
+            type="button"
+            onClick={() => onSelect(i)}
+            data-cursor="VIEW"
+            aria-label={n.g.label}
+            className="absolute -translate-x-1/2 -translate-y-1/2 outline-none"
+            style={{ left: `${n.left}%`, top: `${n.top}%` }}
+          >
+            <div
+              className={`flex flex-col items-center gap-1.5 transition-transform duration-300 ${
+                isActive ? "scale-110" : "hover:scale-105"
+              }`}
             >
-              <Icon size={18} strokeWidth={1.6} />
-            </motion.div>
-          );
-        })}
-      </motion.div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="rounded-full border border-white/10 bg-ink-900/70 px-4 py-2 text-center backdrop-blur">
-          <p className="font-display text-lg text-bone">AI</p>
-          <p className="text-[9px] uppercase tracking-[0.18em] text-haze">Full Stack</p>
-        </div>
+              <span
+                className={`flex h-14 w-14 items-center justify-center rounded-full border backdrop-blur transition-colors ${
+                  isActive
+                    ? "border-bone bg-white/10 text-bone shadow-[0_0_32px_-6px_rgba(244,243,240,0.65)]"
+                    : "border-white/15 bg-ink-850/80 text-haze hover:text-bone"
+                }`}
+              >
+                <Icon size={22} strokeWidth={1.5} />
+              </span>
+              <span
+                className={`text-[10px] uppercase tracking-[0.12em] ${
+                  isActive ? "text-bone" : "text-haze/70"
+                }`}
+              >
+                {n.g.label}
+              </span>
+            </div>
+          </button>
+        );
+      })}
+
+      {/* core */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-ink-900/70 px-4 py-3 text-center backdrop-blur">
+        <p className="font-display text-base text-bone">{skillGroups[active].items.length}</p>
+        <p className="text-[9px] uppercase tracking-[0.16em] text-haze">skills</p>
       </div>
     </div>
   );
@@ -261,6 +306,7 @@ export function AboutExperience() {
 
   const [phase, setPhase] = useState(0);
   const [active, setActive] = useState(0);
+  const [skillIdx, setSkillIdx] = useState(0);
 
   // each phase owns an equal 1/N slice of the scroll (phase 0,1,2 = thirds)
   useMotionValueEvent(scrollYProgress, "change", (p) => {
@@ -280,6 +326,16 @@ export function AboutExperience() {
       Math.min(experiences.length - 1, Math.round(t * (experiences.length - 1)))
     );
     setActive((prev) => (prev === idx ? prev : idx));
+  });
+  // skills reveal progress: the MIDDLE phase (p from 1/N to 2/N)
+  const skillProgress = useTransform(scrollYProgress, [1 / N, 2 / N], [0, 1]);
+  useMotionValueEvent(skillProgress, "change", (t) => {
+    if (phase !== 1) return;
+    const idx = Math.max(
+      0,
+      Math.min(skillGroups.length - 1, Math.round(t * (skillGroups.length - 1)))
+    );
+    setSkillIdx((prev) => (prev === idx ? prev : idx));
   });
   const current = phases[phase];
   const ruet = education.find((e) => e.level === "college")!;
@@ -347,7 +403,7 @@ export function AboutExperience() {
         {/* visual */}
         <div className="relative z-10 mb-8 md:mb-0">
           {phase === 0 && <EducationVisual play={phase === 0} />}
-          {phase === 1 && <SkillsVisual />}
+          {phase === 1 && <SkillsConstellation active={skillIdx} onSelect={setSkillIdx} />}
           {phase === 2 && <ExperienceJourney progress={exprogress} active={active} onJump={scrollToMilestone} />}
         </div>
 
@@ -403,28 +459,61 @@ export function AboutExperience() {
                   <motion.p variants={item} className="mt-2 text-sm text-haze">
                     What I build with — from AI systems to full-stack product.
                   </motion.p>
-                  <div className="mt-6 space-y-5">
-                    {skillGroups.map((g) => (
-                      <motion.div variants={item} key={g.label}>
-                        <p className="eyebrow mb-3 text-bone/60">{g.label}</p>
-                        <ul className="flex flex-wrap gap-2">
-                          {g.items.map((it) => {
-                            const Icon = it.icon;
-                            return (
-                              <li
-                                key={it.name}
-                                data-cursor="VIEW"
-                                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-bone transition-colors hover:border-white/30 hover:bg-white/[0.07]"
-                              >
-                                <Icon size={14} strokeWidth={1.6} className="text-haze" />
-                                {it.name}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </motion.div>
+
+                  {/* group tabs */}
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {skillGroups.map((g, i) => (
+                      <button
+                        key={g.label}
+                        type="button"
+                        onClick={() => setSkillIdx(i)}
+                        data-cursor="VIEW"
+                        aria-pressed={i === skillIdx}
+                        className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                          i === skillIdx
+                            ? "border-white/30 bg-white/10 text-bone"
+                            : "border-white/10 text-haze hover:text-bone"
+                        }`}
+                      >
+                        {g.label}
+                      </button>
                     ))}
                   </div>
+
+                  {/* active group skills */}
+                  <div className="mt-5">
+                    <AnimatePresence mode="wait">
+                      <motion.ul
+                        key={skillIdx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                        className="flex flex-wrap gap-2"
+                      >
+                        {skillGroups[skillIdx].items.map((it, idx) => {
+                          const Icon = it.icon;
+                          return (
+                            <motion.li
+                              key={it.name}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: idx * 0.04, duration: 0.3 }}
+                              data-cursor="VIEW"
+                              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-bone transition-colors hover:border-white/30 hover:bg-white/[0.07]"
+                            >
+                              <Icon size={14} strokeWidth={1.6} className="text-haze" />
+                              {it.name}
+                            </motion.li>
+                          );
+                        })}
+                      </motion.ul>
+                    </AnimatePresence>
+                  </div>
+
+                  <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-haze/60">
+                    {skillIdx + 1} / {skillGroups.length} · scroll to reveal each group
+                  </p>
                 </div>
               )}
 
