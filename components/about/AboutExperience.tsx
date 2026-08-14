@@ -241,7 +241,11 @@ export function AboutExperience() {
         </div>
 
         {/* content */}
-        <div className="relative z-10 w-[88%] max-w-md md:w-[40%]">
+        <div
+          className={`relative z-10 w-[88%] ${
+            phase === 2 ? "max-w-2xl md:w-[58%]" : "max-w-md md:w-[40%]"
+          }`}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={phase}
@@ -321,16 +325,20 @@ export function AboutExperience() {
                   <motion.p variants={item} className="mt-2 text-sm text-haze">
                     Shipping AI products in production.
                   </motion.p>
-                  <div className="mt-6 space-y-5">
+                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {experiences.map((x) => (
-                      <motion.div variants={item} key={x.company} className="border-t border-white/10 pt-4">
+                      <motion.div
+                        variants={item}
+                        key={x.company}
+                        className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      >
                         <div className="flex items-baseline justify-between gap-3">
                           <p className="text-bone">{x.company}</p>
-                          <p className="shrink-0 text-xs text-haze/70">{x.period}</p>
+                          <p className="shrink-0 text-[11px] text-haze/70">{x.period}</p>
                         </div>
-                        <p className="text-sm text-bone/90">{x.role}</p>
-                        <p className="text-xs text-haze/70">{x.location}</p>
-                        <p className="mt-2 text-sm leading-relaxed text-haze">{x.summary}</p>
+                        <p className="mt-1 text-sm text-bone/90">{x.role}</p>
+                        <p className="text-[11px] text-haze/70">{x.location}</p>
+                        <p className="mt-2 text-[13px] leading-relaxed text-haze">{x.summary}</p>
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {x.stack.map((s) => (
                             <span

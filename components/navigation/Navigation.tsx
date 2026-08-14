@@ -31,7 +31,7 @@ export function Navigation() {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-      className="fixed inset-x-0 top-0 z-50"
+      className="absolute inset-x-0 top-0 z-50"
     >
       <div
         className={`mx-auto flex max-w-edge items-center justify-between gap-4 px-6 transition-all duration-500 md:px-10 ${
